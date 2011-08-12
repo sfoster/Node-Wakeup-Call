@@ -11,10 +11,10 @@ var status = function(wakeup){
   // 
 };
 var parseTime = function(str, day) {
-  var m = str.toLowerCase().match(/\s*(\d{1,2}):(\d{1,2})([AP]M)/i);
+  var m = str.toLowerCase().match(/\s*(\d{1,2}):(\d{1,2})\s*([AP]M)?/i);
   var h = parseInt(m[1]), 
     m = parseInt(m[2]),
-    isPM = (m[3] == "pm");
+    isPM = m[3] && m[3] == "pm";
   if(isPM && h <= 12){
     h += 12;
   };
@@ -53,6 +53,7 @@ fs.readFile("./config.json", function(err, data){
     setTimeout(function(){
       play(data.tracks[0], function(){
         console.log("Done");
+        clearInterval(statusItv);
       });
     }, delay);
   }
