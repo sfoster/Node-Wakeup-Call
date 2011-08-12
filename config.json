@@ -1,5 +1,6 @@
 {
-  "wakeup": "8:30AM",
+  "wakeup": "7:30AM",
+  "repeat": true,
   "tracks": [
     "./tracks/14 Good Morning! How Are You_ Shut Up.m4a"
   ]

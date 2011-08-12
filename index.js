@@ -3,13 +3,17 @@ var fs = require('fs'),
   exec = require('child_process').exec;
   require('date-utils');
 
+var config = null, 
+  statusItv = null;
+
 var status = function(wakeup){
   now = new Date;
   var h = now.getHoursBetween(wakeup), 
-    m = now.getMinutesBetween(wakeup) % 60;
+    m = now.getMinutesBetween(wakeup) % 60; 
   console.log("you have %s hrs, %s mins remaining", h, m);
   // 
 };
+
 var parseTime = function(str, day) {
   var m = str.toLowerCase().match(/\s*(\d{1,2}):(\d{1,2})\s*([AP]M)?/i);
   var h = parseInt(m[1]), 
@@ -24,40 +28,48 @@ var parseTime = function(str, day) {
     hours: h
   }); // adds time to existing time
   return time;
+};
+
+function run(){
+  fs.readFile("./config.json", function(err, data){
+    config = JSON.parse(data);
+
+    var now = new Date, 
+      wakeupTime = parseTime(config.wakeup);
+
+      if(now >= wakeupTime) {
+        // its the morning already, set it for tommorow instead
+        wakeupTime = parseTime(config.wakeup, Date.tomorrow());
+      }
+
+      var delay = wakeupTime - now;
+      console.log("wakeup set for: ", wakeupTime.toFormat("YYYY/MM/DD HH24:MI"));
+      status(wakeupTime);
+
+      if(delay > 0){
+        statusItv = setInterval(function(){
+          status(wakeupTime);
+        }, 1000 * 60 * 30);
+        setTimeout(function(){
+          wakeup();
+        }, delay);
+      }
+
+  });
 }
 
-fs.readFile("./config.json", function(err, data){
-  data = JSON.parse(data);
-  console.log("tracks: ", data.tracks);
-  
-  var now = new Date, 
-    wakeup = parseTime(data.wakeup);
-
-  console.log("wakeup tentatively set for: ", wakeup.toFormat("YYYY/MM/DD HH24:MI"));
-  
-  if(now > wakeup) {
-    // its the morning already, set it for tommorow instead
-    wakeup = parseTime(data.wakeup, Date.tomorrow());
-    console.log("setting alarm for tommorow: ", wakeup.toFormat("YYYY/MM/DD HH24:MI"));
-  }
-  var delay = wakeup - now;
-  console.log("wakeup set for: ", wakeup.toFormat("YYYY/MM/DD HH24:MI"));
-  status(wakeup);
-
-  var statusItv;
-  if(delay > 0){
-    statusItv = setInterval(function(){
-      status(wakeup);
-    }, 1000 * 60 * 30);
-    
-    setTimeout(function(){
-      play(data.tracks[0], function(){
-        console.log("Done");
-        clearInterval(statusItv);
-      });
-    }, delay);
-  }
-});
+function wakeup(){
+  console.log("Now playing: " + config.tracks[0]);
+  statusItv && clearInterval(statusItv);
+  play(config.tracks[0], function(){
+    console.log("Done");
+    if(config.repeat) {
+      // run it again
+      // no harm in re-parsing the config to pick up change
+      run();
+    }
+  });
+}
 
 function play(file, cb){
   // afplay is an osx utility for playing audio
@@ -73,4 +85,8 @@ function play(file, cb){
         cb && cb();
       }
   });
+}
+
+if(require.main === module) {
+  run();
 }
