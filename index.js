@@ -1,7 +1,7 @@
 var fs = require('fs'), 
-  path = require('path');
+  path = require('path'),
   exec = require('child_process').exec;
-  require('date-utils');
+require('date-utils');
 
 var config = null, 
   statusItv = null;
@@ -31,7 +31,7 @@ var parseTime = function(str, day) {
 };
 
 function run(){
-  fs.readFile("./config.json", function(err, data){
+  fs.readFile(__dirname + "/config.json", function(err, data){
     config = JSON.parse(data);
 
     var now = new Date, 
@@ -61,7 +61,10 @@ function run(){
 function wakeup(){
   console.log("Now playing: " + config.tracks[0]);
   statusItv && clearInterval(statusItv);
-  play(config.tracks[0], function(){
+
+  var trackPath = path.resolve(config.tracks[0]);
+  
+  play(trackPath, function(){
     console.log("Done");
     if(config.repeat) {
       // run it again
@@ -88,5 +91,6 @@ function play(file, cb){
 }
 
 if(require.main === module) {
+  process.chdir(__dirname);
   run();
 }
