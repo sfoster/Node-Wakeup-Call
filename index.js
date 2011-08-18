@@ -16,8 +16,8 @@ var status = function(wakeup){
 
 var parseTime = function(str, day) {
   var m = str.toLowerCase().match(/\s*(\d{1,2}):(\d{1,2})\s*([AP]M)?/i);
-  var h = parseInt(m[1]), 
-    m = parseInt(m[2]),
+  var h = parseInt(m[1], 10), 
+    m = parseInt(m[2], 10),
     isPM = m[3] && m[3] == "pm";
   if(isPM && h <= 12){
     h += 12;
